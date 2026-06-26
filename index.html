@@ -777,6 +777,40 @@
         });
         document.getElementById(tabId).classList.add('active');
         event.target.classList.add('active');
+
+        // Reset tab content to default
+        resetTabContent(tabId);
+    }
+
+    function resetTabContent(tabId) {
+        if (tabId === 'id-tab') {
+            // 重置身分證 Tab
+            document.getElementById('type').value = 'nat';
+            document.getElementById('city').value = 'random';
+            document.getElementById('gender').value = 'random';
+            document.getElementById('display-id').innerText = '- - - - - - - -';
+            document.getElementById('input-id').value = '';
+            document.getElementById('v-msg').style.display = 'none';
+        } else if (tabId === 'cc-tab') {
+            // 重置信用卡 Tab
+            document.getElementById('cc-mode').value = 'random';
+            document.getElementById('bin-group').style.display = 'none';
+            document.getElementById('bin-input').value = '';
+            document.getElementById('cc-length').value = '16';
+            document.getElementById('display-cc').innerText = '---- ---- ---- ----';
+            document.getElementById('input-cc').value = '';
+            document.getElementById('cc-v-msg').style.display = 'none';
+        } else if (tabId === 'barcode-tab') {
+            // 重置條碼 Tab
+            document.getElementById('barcode-type').value = 'CODE128';
+            document.getElementById('barcode-value').value = '';
+            document.getElementById('barcode').innerHTML = '';
+            document.getElementById('qr-value').value = '';
+            document.getElementById('qrcode').innerHTML = '';
+            if (currentQRCode) {
+                currentQRCode = null;
+            }
+        }
     }
 
     // ==================== Toast 提示 ====================
