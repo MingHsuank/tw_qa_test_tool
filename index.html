@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TW ID & Credit Card Generator</title>
+    <link rel="icon" href="https://fav.farm/🇹🇼" />
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+            --dark: #1e293b;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            color: var(--dark);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .tab-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tab-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 1rem 1rem;
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(59,130,246,0.08);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: white;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            right: 10px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2.5rem;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .section-title {
+            color: var(--dark);
+            margin: 0 0 1.5rem 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.9rem;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select:hover, input:hover, textarea:hover {
+            border-color: #cbd5e0;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+
+        .flex-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .flex-group > * {
+            flex: 1;
+        }
+
+        .flex-2 { flex: 2 !important; }
+
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .btn-gen {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .btn-copy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, var(--dark) 0%, #0f172a 100%);
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-display {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-text {
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: 3px;
+        }
+
+        .barcode-display {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-display {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .qr-container {
+            display: inline-block;
+        }
+
+
+        .v-result {
+            margin-top: 15px;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+            font-size: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .v-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .v-error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        .footer {
+            font-size: 0.85rem;
+            color: var(--dark);
+            opacity: 0.7;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .header h1 { font-size: 1.5rem; }
+            .tab-content { padding: 1.5rem; }
+            .result-text { font-size: 1.4rem; letter-spacing: 2px; }
+            .section-title { font-size: 1.1rem; }
+            .tab-btn { font-size: 0.85rem; min-width: 120px; padding: 1rem 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🇹🇼 TW QA Test tool</h1>
+</div>
+
+<div class="container">
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('id-tab')">🪪 身分證/居留證</button>
+            <button class="tab-btn" onclick="switchTab('cc-tab')">💳 信用卡卡號</button>
+            <button class="tab-btn" onclick="switchTab('barcode-tab')">📊 條碼</button>
+        </div>
+
+        <!-- 身分證 Tab -->
+        <div id="id-tab" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">產生器 Generator</h2>
+                <div class="group">
+                    <label>證件類別 ID Type</label>
+                    <select id="type">
+                        <option value="nat">🪪 身分證 (National ID)</option>
+                        <option value="new">🆕 新版居留證 (Resident UI - New)</option>
+                        <option value="old">📋 舊版居留證 (Resident UI - Old)</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label>地區 & 性別 Region & Gender</label>
+                    <div class="flex-group">
+                        <select id="city" class="flex-2">
+                            <option value="random">🎲 隨機地區 (Random)</option>
+                            <option value="A">台北市 Taipei (A)</option>
+                            <option value="F">新北市 New Taipei (F)</option>
+                            <option value="H">桃園市 Taoyuan (H)</option>
+                            <option value="C">基隆市 Keelung (C)</option>
+                            <option value="O">新竹市 Hsinchu City (O)</option>
+                            <option value="J">新竹縣 Hsinchu County (J)</option>
+                            <option value="B">台中市 Taichung (B)</option>
+                            <option value="K">苗栗縣 Miaoli (K)</option>
+                            <option value="N">彰化縣 Changhua (N)</option>
+                            <option value="M">南投縣 Nantou (M)</option>
+                            <option value="E">高雄市 Kaohsiung (E)</option>
+                            <option value="D">台南市 Tainan (D)</option>
+                            <option value="I">嘉義市 Chiayi City (I)</option>
+                            <option value="Q">嘉義縣 Chiayi County (Q)</option>
+                            <option value="P">雲林縣 Yunlin (P)</option>
+                            <option value="T">屏東縣 Pingtung (T)</option>
+                            <option value="G">宜蘭縣 Yilan (G)</option>
+                            <option value="U">花蓮縣 Hualien (U)</option>
+                            <option value="V">台東縣 Taitung (V)</option>
+                            <option value="W">金門縣 Kinmen (W)</option>
+                            <option value="X">澎湖縣 Penghu (X)</option>
+                            <option value="Z">連江縣 Lienchiang (Z)</option>
+                        </select>
+                        <select id="gender">
+                            <option value="random">不限 Any</option>
+                            <option value="M">♂ 男性</option>
+                            <option value="F">♀ 女性</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-container">
+                    <button class="btn-gen" onclick="generate()">🎲 產生</button>
+                    <button class="btn-copy" onclick="copyText()">📋 複製</button>
+                </div>
+                <div class="result-display">
+                    <span class="result-text" id="display-id">- - - - - - - -</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">驗證器 Validator</h2>
+                <div class="group">
+                    <label>驗證身分證 / 居留證號碼</label>
+                    <input type="text" id="input-id" placeholder="輸入號碼 e.g. A123456789" maxlength="10">
+                </div>
+                <button class="btn-check" onclick="validate()">✓ 驗證</button>
+                <div id="v-msg" class="v-result"></div>
+            </div>
+        </div>
+
+        <!-- 信用卡 Tab -->
+        <div id="cc-tab" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">產生器 Generator</h2>
+                <div class="group">
+                    <label>產生模式 Generation Mode</label>
+                    <select id="cc-mode" onchange="toggleBinInput()">
+                        <option value="random">🎲 隨機產生 (Random)</option>
+                        <option value="bin">🔢 指定 BIN 碼 (Custom BIN)</option>
+                    </select>
+                </div>
+                <div class="group" id="bin-group" style="display: none;">
+                    <label>BIN 碼 (銀行識別碼，6-8 位數字)</label>
+                    <input type="text" id="bin-input" placeholder="例如: 424242 或 555544" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <div class="group">
+                    <label>卡號長度 Card Length</label>
+                    <select id="cc-length">
+                        <option value="16">16 位數 (最常見 Visa/Mastercard)</option>
+                        <option value="15">15 位數 (American Express)</option>
+                        <option value="14">14 位數 (Diners Club)</option>
+                        <option value="13">13 位數 (Visa 舊版)</option>
+                    </select>
+                </div>
+                <div class="btn-container">
+                    <button class="btn-gen" onclick="generateCreditCard()">🎲 產生</button>
+                    <button class="btn-copy" onclick="copyCreditCard()">📋 複製</button>
+                </div>
+                <div class="result-display">
+                    <span class="result-text" id="display-cc">---- ---- ---- ----</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">驗證器 Validator</h2>
+                <div class="group">
+                    <label>驗證信用卡號 (Luhn Algorithm)</label>
+                    <input type="text" id="input-cc" placeholder="輸入卡號 e.g. 4242424242424242" maxlength="19">
+                </div>
+                <button class="btn-check" onclick="validateCreditCard()">✓ 驗證</button>
+                <div id="cc-v-msg" class="v-result"></div>
+            </div>
+        </div>
+
+        <!-- 條碼 Tab -->
+        <div id="barcode-tab" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">條碼產生器 Barcode Generator</h2>
+                <div class="group">
+                    <label>條碼類型 Barcode Type</label>
+                    <select id="barcode-type">
+                        <option value="CODE128">Code 128 (推薦)</option>
+                        <option value="CODE39">Code 39</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label>條碼內容 Value</label>
+                    <input type="text" id="barcode-value" placeholder="輸入條碼內容 e.g. ABC123">
+                </div>
+                <div class="btn-container">
+                    <button class="btn-gen" onclick="generateBarcode()">🎲 產生條碼</button>
+                </div>
+                <div class="barcode-display" id="barcode-container">
+                    <svg id="barcode"></svg>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">QR Code 產生器</h2>
+                <div class="group">
+                    <label>QR Code 內容</label>
+                    <textarea id="qr-value" placeholder="輸入 QR Code 內容，可以是文字、URL、JSON 等"></textarea>
+                </div>
+                <div class="btn-container">
+                    <button class="btn-gen" onclick="generateQRCode()">🎲 產生 QR Code</button>
+                </div>
+                <div class="qr-display" id="qr-container">
+                    <div id="qrcode"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Point code LIFF Tab -->
+    </div>
+
+    <div class="footer">
+        🔒 Internal Use Only | For Testing Purpose
+    </div>
+</div>
+
+<script>
+    const cityMap = {'A':10,'B':11,'C':12,'D':13,'E':14,'F':15,'G':16,'H':17,'I':34,'J':18,'K':19,'L':20,'M':21,'N':22,'O':35,'P':23,'Q':24,'R':25,'S':26,'T':27,'U':28,'V':29,'W':32,'X':30,'Y':31,'Z':33};
+
+    // ==================== 身分證相關函數 ====================
+    function checkAlgorithm(id) {
+        id = id.toUpperCase().trim();
+        if (!/^[A-Z][A-D890-9][0-9]{8}$/.test(id)) return false;
+        const chars = id.split('');
+        const n1 = cityMap[chars[0]];
+        let nums = [Math.floor(n1/10), n1%10];
+        if (isNaN(chars[1])) {
+            nums.push(cityMap[chars[1]] % 10);
+        } else {
+            nums.push(parseInt(chars[1]));
+        }
+        for (let i = 2; i < 10; i++) nums.push(parseInt(chars[i]));
+        const weights = [1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1];
+        let total = 0;
+        for (let i = 0; i < 10; i++) total += nums[i] * weights[i];
+        return (total + nums[10]) % 10 === 0;
+    }
+
+    function generate() {
+        const type = document.getElementById('type').value;
+        let city = document.getElementById('city').value;
+        const gender = document.getElementById('gender').value;
+        if (city === 'random') city = Object.keys(cityMap)[Math.floor(Math.random() * 26)];
+        const n1 = cityMap[city];
+        let second;
+        if (type === 'nat') second = (gender==='M')?1:(gender==='F')?2:(Math.random()<0.5?1:2);
+        else if (type === 'new') second = (gender==='M')?8:(gender==='F')?9:(Math.random()<0.5?8:9);
+        else {
+            const isM = (gender==='M')||(Math.random()<0.5);
+            second = isM?(Math.random()<0.5?'A':'C'):(Math.random()<0.5?'B':'D');
+        }
+        const stream = Array.from({length:7},()=>Math.floor(Math.random()*10));
+        let full = [Math.floor(n1/10), n1%10, isNaN(second)?cityMap[second]%10:parseInt(second), ...stream];
+        const weights = [1,9,8,7,6,5,4,3,2,1];
+        let total = 0;
+        full.forEach((n,i)=>total+=n*weights[i]);
+        const check = (10-(total%10))%10;
+        document.getElementById('display-id').innerText = `${city}${second}${stream.join('')}${check}`;
+    }
+
+    function validate() {
+        const val = document.getElementById('input-id').value;
+        const box = document.getElementById('v-msg');
+        box.style.display = 'block';
+        if (checkAlgorithm(val)) {
+            box.innerText = "✓ 格式正確 Valid Format";
+            box.className = "v-result v-success";
+        } else {
+            box.innerText = "✘ 格式錯誤 Invalid Format";
+            box.className = "v-result v-error";
+        }
+    }
+
+    function copyText() {
+        const text = document.getElementById('display-id').innerText;
+        if (text.includes('-')) return;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('✓ 已複製');
+        });
+    }
+
+    // ==================== 信用卡相關函數 ====================
+    const commonTaiwanBins = [
+        '424242', '491881', '520229', '553691', '555544',
+        '601100', '622280', '400360', '543631', '424201'
+    ];
+
+    function toggleBinInput() {
+        const mode = document.getElementById('cc-mode').value;
+        document.getElementById('bin-group').style.display = mode === 'bin' ? 'block' : 'none';
+    }
+
+    function luhnChecksum(cardNum) {
+        let sum = 0;
+        let alternate = false;
+        for (let i = cardNum.length - 1; i >= 0; i--) {
+            let n = parseInt(cardNum[i]);
+            if (alternate) {
+                n *= 2;
+                if (n > 9) n -= 9;
+            }
+            sum += n;
+            alternate = !alternate;
+        }
+        return sum % 10;
+    }
+
+    function generateLuhnCheckDigit(partialCardNum) {
+        const checksum = luhnChecksum(partialCardNum + '0');
+        return checksum === 0 ? 0 : 10 - checksum;
+    }
+
+    function validateLuhn(cardNum) {
+        return luhnChecksum(cardNum) === 0;
+    }
+
+    function generateCreditCard() {
+        const mode = document.getElementById('cc-mode').value;
+        const length = parseInt(document.getElementById('cc-length').value);
+        let cardNumber = '';
+
+        if (mode === 'random') {
+            const bin = commonTaiwanBins[Math.floor(Math.random() * commonTaiwanBins.length)];
+            cardNumber = bin;
+        } else {
+            const customBin = document.getElementById('bin-input').value.trim();
+            if (customBin.length < 6 || customBin.length > 8) {
+                showToast('✘ BIN 碼必須是 6-8 位數字', true);
+                return;
+            }
+            cardNumber = customBin;
+        }
+
+        const remainingLength = length - cardNumber.length - 1;
+        for (let i = 0; i < remainingLength; i++) {
+            cardNumber += Math.floor(Math.random() * 10);
+        }
+
+        const checkDigit = generateLuhnCheckDigit(cardNumber);
+        cardNumber += checkDigit;
+
+        const formatted = cardNumber.match(/.{1,4}/g).join(' ');
+        document.getElementById('display-cc').innerText = formatted;
+    }
+
+    function validateCreditCard() {
+        let val = document.getElementById('input-cc').value.replace(/\s/g, '');
+        const box = document.getElementById('cc-v-msg');
+        box.style.display = 'block';
+
+        if (!/^\d{13,19}$/.test(val)) {
+            box.innerText = "✘ 格式錯誤 (必須是 13-19 位數字)";
+            box.className = "v-result v-error";
+            return;
+        }
+
+        if (validateLuhn(val)) {
+            box.innerText = "✓ 驗證通過 (Luhn Algorithm Passed)";
+            box.className = "v-result v-success";
+        } else {
+            box.innerText = "✘ 驗證失敗 (Luhn Algorithm Failed)";
+            box.className = "v-result v-error";
+        }
+    }
+
+    function copyCreditCard() {
+        const text = document.getElementById('display-cc').innerText;
+        if (text.includes('----')) return;
+        const cardNum = text.replace(/\s/g, '');
+        navigator.clipboard.writeText(cardNum).then(() => {
+            showToast('✓ 已複製');
+        });
+    }
+
+    // ==================== 條碼相關函數 ====================
+    function generateBarcode() {
+        const value = document.getElementById('barcode-value').value.trim();
+        const type = document.getElementById('barcode-type').value;
+
+        if (!value) {
+            showToast('✘ 請輸入條碼內容', true);
+            return;
+        }
+
+        try {
+            JsBarcode("#barcode", value, {
+                format: type,
+                width: 2,
+                height: 100,
+                displayValue: true,
+                fontSize: 16,
+                margin: 10
+            });
+            showToast('✓ 條碼已產生');
+        } catch (e) {
+            showToast('✘ 條碼產生失敗：' + e.message, true);
+        }
+    }
+
+
+    let currentQRCode = null;
+
+    function generateQRCode() {
+        const value = document.getElementById('qr-value').value.trim();
+
+        if (!value) {
+            showToast('✘ 請輸入 QR Code 內容', true);
+            return;
+        }
+
+        const container = document.getElementById('qrcode');
+        container.innerHTML = '';
+
+        currentQRCode = new QRCode(container, {
+            text: value,
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        showToast('✓ QR Code 已產生');
+    }
+
+
+
+    // ==================== Tab 切換 ====================
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // ==================== Toast 提示 ====================
+    function showToast(message, isError = false) {
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: ${isError ? '#ef4444' : '#10b981'};
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            z-index: 9999;
+            animation: slideInRight 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // 動畫樣式
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+</body>
+</html>
