@@ -272,9 +272,24 @@
             letter-spacing: 3px;
         }
 
+        .barcode-section-wrapper {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .barcode-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .barcode-right {
+            flex-shrink: 0;
+            width: 350px;
+        }
+
         .barcode-display {
-            margin-top: 1.5rem;
-            padding: 2rem;
+            padding: 1.5rem;
             background: white;
             border-radius: 16px;
             text-align: center;
@@ -286,8 +301,7 @@
         }
 
         .qr-display {
-            margin-top: 1.5rem;
-            padding: 2rem;
+            padding: 1.5rem;
             background: white;
             border-radius: 16px;
             text-align: center;
@@ -297,10 +311,20 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
+            min-height: 250px;
         }
 
         .qr-container {
             display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .barcode-section-wrapper {
+                flex-direction: column;
+            }
+            .barcode-right {
+                width: 100%;
+            }
         }
 
 
@@ -478,36 +502,48 @@
         <div id="barcode-tab" class="tab-content">
             <div class="section">
                 <h2 class="section-title">條碼產生器 Barcode Generator</h2>
-                <div class="group">
-                    <label>條碼類型 Barcode Type</label>
-                    <select id="barcode-type">
-                        <option value="CODE128">Code 128 (推薦)</option>
-                        <option value="CODE39">Code 39</option>
-                    </select>
-                </div>
-                <div class="group">
-                    <label>條碼內容 Value</label>
-                    <input type="text" id="barcode-value" placeholder="輸入條碼內容 e.g. ABC123">
-                </div>
-                <div class="btn-container">
-                    <button class="btn-gen" onclick="generateBarcode()">🎲 產生條碼</button>
-                </div>
-                <div class="barcode-display" id="barcode-container">
-                    <svg id="barcode"></svg>
+                <div class="barcode-section-wrapper">
+                    <div class="barcode-left">
+                        <div class="group">
+                            <label>條碼類型 Barcode Type</label>
+                            <select id="barcode-type">
+                                <option value="CODE128">Code 128 (推薦)</option>
+                                <option value="CODE39">Code 39</option>
+                            </select>
+                        </div>
+                        <div class="group">
+                            <label>條碼內容 Value</label>
+                            <input type="text" id="barcode-value" placeholder="輸入條碼內容 e.g. ABC123">
+                        </div>
+                        <div class="btn-container">
+                            <button class="btn-gen" onclick="generateBarcode()">🎲 產生條碼</button>
+                        </div>
+                    </div>
+                    <div class="barcode-right">
+                        <div class="barcode-display" id="barcode-container">
+                            <svg id="barcode"></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="section">
                 <h2 class="section-title">QR Code 產生器</h2>
-                <div class="group">
-                    <label>QR Code 內容</label>
-                    <textarea id="qr-value" placeholder="輸入 QR Code 內容，可以是文字、URL、JSON 等"></textarea>
-                </div>
-                <div class="btn-container">
-                    <button class="btn-gen" onclick="generateQRCode()">🎲 產生 QR Code</button>
-                </div>
-                <div class="qr-display" id="qr-container">
-                    <div id="qrcode"></div>
+                <div class="barcode-section-wrapper">
+                    <div class="barcode-left">
+                        <div class="group">
+                            <label>QR Code 內容</label>
+                            <textarea id="qr-value" placeholder="輸入 QR Code 內容，可以是文字、URL、JSON 等"></textarea>
+                        </div>
+                        <div class="btn-container">
+                            <button class="btn-gen" onclick="generateQRCode()">🎲 產生 QR Code</button>
+                        </div>
+                    </div>
+                    <div class="barcode-right">
+                        <div class="qr-display" id="qr-container">
+                            <div id="qrcode"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
