@@ -272,6 +272,58 @@
             letter-spacing: 3px;
         }
 
+        .history {
+            margin-top: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .history summary {
+            padding: 14px 16px;
+            color: var(--dark);
+            font-weight: 600;
+            cursor: pointer;
+            background: #f8fafc;
+        }
+
+        .history summary:hover {
+            background: #f1f5f9;
+        }
+
+        .history-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .history-list li {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 4px 16px;
+            padding: 12px 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .history-value {
+            color: var(--dark);
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .history-date, .history-empty {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .history-empty {
+            padding: 12px 16px;
+        }
+
         .barcode-section-wrapper {
             display: flex;
             gap: 2rem;
@@ -442,6 +494,10 @@
                 <div class="result-display">
                     <span class="result-text" id="display-id">- - - - - - - -</span>
                 </div>
+                <details class="history">
+                    <summary>產生紀錄（<span id="id-history-count">0</span>）</summary>
+                    <ul class="history-list" id="id-history-list"></ul>
+                </details>
             </div>
 
             <div class="section">
@@ -486,6 +542,10 @@
                 <div class="result-display">
                     <span class="result-text" id="display-cc">---- ---- ---- ----</span>
                 </div>
+                <details class="history">
+                    <summary>產生紀錄（<span id="cc-history-count">0</span>）</summary>
+                    <ul class="history-list" id="cc-history-list"></ul>
+                </details>
             </div>
 
             <div class="section">
@@ -560,6 +620,72 @@
 <script>
     const cityMap = {'A':10,'B':11,'C':12,'D':13,'E':14,'F':15,'G':16,'H':17,'I':34,'J':18,'K':19,'L':20,'M':21,'N':22,'O':35,'P':23,'Q':24,'R':25,'S':26,'T':27,'U':28,'V':29,'W':32,'X':30,'Y':31,'Z':33};
 
+    const historyStorageKey = 'tw-qa-generator-history';
+    const idTypeLabels = { nat: '身分證', new: '新版居留證', old: '舊版居留證' };
+
+    function loadHistory() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(historyStorageKey) || '[]');
+            return Array.isArray(saved) ? saved.filter(item =>
+                item && ['id', 'cc'].includes(item.kind) &&
+                typeof item.value === 'string' && typeof item.createdAt === 'string' &&
+                !Number.isNaN(Date.parse(item.createdAt))
+            ) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    const generationHistory = loadHistory();
+
+    function renderHistory(kind) {
+        const list = document.getElementById(`${kind}-history-list`);
+        const records = generationHistory.filter(item => item.kind === kind);
+        document.getElementById(`${kind}-history-count`).textContent = records.length;
+        list.replaceChildren();
+
+        if (records.length === 0) {
+            const empty = document.createElement('li');
+            empty.className = 'history-empty';
+            empty.textContent = '尚無產生紀錄';
+            list.appendChild(empty);
+            return;
+        }
+
+        records.slice().reverse().forEach(record => {
+            const item = document.createElement('li');
+            const value = document.createElement('span');
+            value.className = 'history-value';
+            value.textContent = kind === 'id'
+                ? `${idTypeLabels[record.type] || '證件'} · ${record.value}`
+                : record.value;
+
+            const date = document.createElement('time');
+            date.className = 'history-date';
+            date.dateTime = record.createdAt;
+            date.textContent = new Date(record.createdAt).toLocaleString('zh-TW', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            });
+
+            item.append(value, date);
+            list.appendChild(item);
+        });
+    }
+
+    function addHistory(kind, value, type) {
+        generationHistory.push({ kind, value, type, createdAt: new Date().toISOString() });
+        try {
+            localStorage.setItem(historyStorageKey, JSON.stringify(generationHistory));
+        } catch (error) {
+            showToast('✘ 無法儲存產生紀錄，請檢查瀏覽器儲存空間', true);
+        }
+        renderHistory(kind);
+    }
+
+    renderHistory('id');
+    renderHistory('cc');
+
     // ==================== 身分證相關函數 ====================
     function checkAlgorithm(id) {
         id = id.toUpperCase().trim();
@@ -598,7 +724,9 @@
         let total = 0;
         full.forEach((n,i)=>total+=n*weights[i]);
         const check = (10-(total%10))%10;
-        document.getElementById('display-id').innerText = `${city}${second}${stream.join('')}${check}`;
+        const idNumber = `${city}${second}${stream.join('')}${check}`;
+        document.getElementById('display-id').innerText = idNumber;
+        addHistory('id', idNumber, type);
     }
 
     function validate() {
@@ -684,6 +812,7 @@
 
         const formatted = cardNumber.match(/.{1,4}/g).join(' ');
         document.getElementById('display-cc').innerText = formatted;
+        addHistory('cc', formatted);
     }
 
     function validateCreditCard() {
