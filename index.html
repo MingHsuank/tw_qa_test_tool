@@ -445,7 +445,7 @@
                 <h2 class="section-title">產生器 Generator</h2>
                 <div class="group">
                     <label>證件類別 ID Type</label>
-                    <select id="type">
+                    <select id="type" onchange="updateGenderOptions()">
                         <option value="nat">🪪 身分證 (National ID)</option>
                         <option value="new">🆕 新版居留證 (Resident UI - New)</option>
                         <option value="old">📋 舊版居留證 (Resident UI - Old)</option>
@@ -622,6 +622,29 @@
 
     const historyStorageKey = 'tw-qa-generator-history';
     const idTypeLabels = { nat: '身分證', new: '新版居留證', old: '舊版居留證' };
+    const genderOptions = {
+        nat: [
+            ['random', '不限 Any'],
+            ['M', '♂ 男性'],
+            ['F', '♀ 女性']
+        ],
+        new: [
+            ['8', '第二碼為 8：男性'],
+            ['9', '第二碼為 9：女性']
+        ],
+        old: [
+            ['A', '第二碼為 A：男性（外國人，如白領專業人員、外籍移工、外籍學生等）'],
+            ['B', '第二碼為 B：女性（外國人）'],
+            ['C', '第二碼為 C：男性（無戶籍國民、港澳居民、大陸地區人民）'],
+            ['D', '第二碼為 D：女性（無戶籍國民、港澳居民、大陸地區人民）']
+        ]
+    };
+
+    function updateGenderOptions() {
+        const type = document.getElementById('type').value;
+        const gender = document.getElementById('gender');
+        gender.replaceChildren(...genderOptions[type].map(([value, label]) => new Option(label, value)));
+    }
 
     function loadHistory() {
         try {
@@ -713,11 +736,7 @@
         const n1 = cityMap[city];
         let second;
         if (type === 'nat') second = (gender==='M')?1:(gender==='F')?2:(Math.random()<0.5?1:2);
-        else if (type === 'new') second = (gender==='M')?8:(gender==='F')?9:(Math.random()<0.5?8:9);
-        else {
-            const isM = (gender==='M')||(Math.random()<0.5);
-            second = isM?(Math.random()<0.5?'A':'C'):(Math.random()<0.5?'B':'D');
-        }
+        else second = gender;
         const stream = Array.from({length:7},()=>Math.floor(Math.random()*10));
         let full = [Math.floor(n1/10), n1%10, isNaN(second)?cityMap[second]%10:parseInt(second), ...stream];
         const weights = [1,9,8,7,6,5,4,3,2,1];
@@ -916,8 +935,8 @@
         if (tabId === 'id-tab') {
             // 重置身分證 Tab
             document.getElementById('type').value = 'nat';
+            updateGenderOptions();
             document.getElementById('city').value = 'random';
-            document.getElementById('gender').value = 'random';
             document.getElementById('display-id').innerText = '- - - - - - - -';
             document.getElementById('input-id').value = '';
             document.getElementById('v-msg').style.display = 'none';
