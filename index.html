@@ -408,6 +408,17 @@
             border: 2px solid #ef4444;
         }
 
+        .v-error ul {
+            margin: 8px 0 0;
+            padding-left: 1.5rem;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .v-error li + li {
+            margin-top: 4px;
+        }
+
         .footer {
             font-size: 0.85rem;
             color: var(--dark);
@@ -503,8 +514,16 @@
             <div class="section">
                 <h2 class="section-title">驗證器 Validator</h2>
                 <div class="group">
-                    <label>驗證身分證 / 居留證號碼</label>
-                    <input type="text" id="input-id" placeholder="輸入號碼 e.g. A123456789" maxlength="10">
+                    <label for="validator-type">要驗證的證件類別</label>
+                    <select id="validator-type">
+                        <option value="nat">身分證</option>
+                        <option value="new">新版居留證</option>
+                        <option value="old">舊版居留證</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label for="input-id">驗證身分證 / 居留證號碼</label>
+                    <input type="text" id="input-id" placeholder="輸入號碼 e.g. A123456789">
                 </div>
                 <button class="btn-check" onclick="validate()">✓ 驗證</button>
                 <div id="v-msg" class="v-result"></div>
@@ -711,8 +730,6 @@
 
     // ==================== 身分證相關函數 ====================
     function checkAlgorithm(id) {
-        id = id.toUpperCase().trim();
-        if (!/^[A-Z][A-D890-9][0-9]{8}$/.test(id)) return false;
         const chars = id.split('');
         const n1 = cityMap[chars[0]];
         let nums = [Math.floor(n1/10), n1%10];
@@ -726,6 +743,40 @@
         let total = 0;
         for (let i = 0; i < 10; i++) total += nums[i] * weights[i];
         return (total + nums[10]) % 10 === 0;
+    }
+
+    function getIdValidationErrors(value, type) {
+        const id = value.trim().toUpperCase();
+        const errors = [];
+        if (!id) return ['請輸入證號。'];
+
+        if (id.length !== 10) {
+            errors.push(`證號須為 10 碼，目前為 ${id.length} 碼。`);
+        }
+        if (id[0] && !Object.hasOwn(cityMap, id[0])) {
+            errors.push('第 1 碼須為英文字母 A～Z（地區碼）。');
+        }
+
+        const secondDigitRules = {
+            nat: { pattern: /^[12]$/, message: '身分證第 2 碼須為 1（男性）或 2（女性）。' },
+            new: { pattern: /^[89]$/, message: '新版居留證第 2 碼須為 8（男性）或 9（女性）。' },
+            old: { pattern: /^[A-D]$/, message: '舊版居留證第 2 碼須為英文字母 A、B、C 或 D。' }
+        };
+        if (id[1] && !secondDigitRules[type].pattern.test(id[1])) {
+            errors.push(secondDigitRules[type].message);
+        }
+        for (let i = 2; i < 9; i++) {
+            if (id[i] && !/^[0-9]$/.test(id[i])) {
+                errors.push(`第 ${i + 1} 碼須為數字 0～9。`);
+            }
+        }
+        if (id[9] && !/^[0-9]$/.test(id[9])) {
+            errors.push('第 10 碼（檢查碼）須為數字 0～9。');
+        }
+        if (errors.length === 0 && !checkAlgorithm(id)) {
+            errors.push('第 10 碼檢查碼不符，請確認證號各碼是否輸入正確。');
+        }
+        return errors;
     }
 
     function generate() {
@@ -750,13 +801,24 @@
 
     function validate() {
         const val = document.getElementById('input-id').value;
+        const type = document.getElementById('validator-type').value;
         const box = document.getElementById('v-msg');
         box.style.display = 'block';
-        if (checkAlgorithm(val)) {
-            box.innerText = "✓ 格式正確 Valid Format";
+        const errors = getIdValidationErrors(val, type);
+        box.replaceChildren();
+        if (errors.length === 0) {
+            box.textContent = `✓ ${idTypeLabels[type]}格式與檢查碼正確`;
             box.className = "v-result v-success";
         } else {
-            box.innerText = "✘ 格式錯誤 Invalid Format";
+            const heading = document.createElement('div');
+            heading.textContent = `✘ ${idTypeLabels[type]}驗證失敗，請修正：`;
+            const list = document.createElement('ul');
+            errors.forEach(error => {
+                const item = document.createElement('li');
+                item.textContent = error;
+                list.appendChild(item);
+            });
+            box.append(heading, list);
             box.className = "v-result v-error";
         }
     }
@@ -938,6 +1000,7 @@
             updateGenderOptions();
             document.getElementById('city').value = 'random';
             document.getElementById('display-id').innerText = '- - - - - - - -';
+            document.getElementById('validator-type').value = 'nat';
             document.getElementById('input-id').value = '';
             document.getElementById('v-msg').style.display = 'none';
         } else if (tabId === 'cc-tab') {
